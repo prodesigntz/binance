@@ -26,6 +26,8 @@ export type MarketRowPropsSpot = MarketRowPropsBase & {
   variant: 'spot';
   base: string;
   quote: string;
+  name?: string;
+  image?: string;
   volumeLabel: string;
   leverageLabel?: string;
 };
@@ -105,6 +107,8 @@ function CryptoRowContent({
 function SpotRowContent({
   base,
   quote,
+  name,
+  image,
   volumeLabel,
   leverageLabel,
   lastPriceLabel,
@@ -112,49 +116,54 @@ function SpotRowContent({
   changePct,
   onPress,
 }: MarketRowPropsSpot): React.JSX.Element {
-  const { colors, spacing, typography, radii } = useTheme();
+  const { colors, spacing, typography } = useTheme();
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'center',
-        minHeight: 66,
-        paddingVertical: 12,
+        minHeight: 64,
+        paddingVertical: 10,
         paddingHorizontal: spacing.md,
         opacity: pressed ? 0.85 : 1,
       })}
     >
-      <View style={{ flex: 1.2 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Text style={[typography.h2, { color: colors.text }]}>
-            {base}
-            <Text style={{ color: colors.text3, fontWeight: '700' }}> /{quote}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1.4, minWidth: 0 }}>
+        <CryptoIcon symbol={base} size={32} iconUrl={image} />
+        <View style={{ marginLeft: 10, flex: 1, minWidth: 0 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Text style={[typography.h2, { color: colors.text }]}>
+              {base}
+              <Text style={{ color: colors.text3, fontWeight: '500', fontSize: 13 }}> /{quote}</Text>
+            </Text>
+            {leverageLabel != null && (
+              <View
+                style={{
+                  backgroundColor: '#212A34',
+                  paddingHorizontal: 4,
+                  paddingVertical: 1,
+                  borderRadius: 4,
+                }}
+              >
+                <Text style={{ color: colors.text2, fontSize: 10, fontWeight: '700' }}>
+                  {leverageLabel}
+                </Text>
+              </View>
+            )}
+          </View>
+          <Text style={[typography.sub, { marginTop: 2, color: colors.text3, fontSize: 12 }]} numberOfLines={1}>
+            {name ? `${name}  ${volumeLabel}` : volumeLabel}
           </Text>
-          {leverageLabel != null && (
-            <View
-              style={{
-                backgroundColor: colors.surface,
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-                borderRadius: radii.sm,
-              }}
-            >
-              <Text style={[typography.sub, { color: colors.text2 }]}>{leverageLabel}</Text>
-            </View>
-          )}
         </View>
-        <Text style={[typography.sub, { marginTop: 4, color: colors.text3 }]}>
-          {volumeLabel}
-        </Text>
       </View>
       <View style={{ flex: 1, alignItems: 'flex-end' }}>
         <Text style={[typography.h2, { color: colors.text }]}>{lastPriceLabel}</Text>
-        <Text style={[typography.sub, { marginTop: 4, color: colors.text3 }]}>
+        <Text style={[typography.sub, { marginTop: 2, color: colors.text3 }]}>
           {approxUsdLabel}
         </Text>
       </View>
-      <View style={{ minWidth: 88, alignItems: 'flex-end', marginLeft: spacing.sm }}>
+      <View style={{ minWidth: 80, alignItems: 'flex-end', marginLeft: spacing.sm }}>
         <PercentBadge value={changePct} />
       </View>
     </Pressable>

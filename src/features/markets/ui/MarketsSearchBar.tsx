@@ -29,7 +29,7 @@ export function MarketsSearchBar({ value, onChangeText }: Props): React.JSX.Elem
         <Ionicons name="search" size={18} color={colors.iconMuted} style={styles.searchIcon} />
         <TextInput
           style={[styles.input, { color: colors.text }]}
-          placeholder="Search Coin Pairs"
+          placeholder="Search coin pair and trend"
           placeholderTextColor={colors.iconMuted}
           value={value}
           onChangeText={onChangeText}

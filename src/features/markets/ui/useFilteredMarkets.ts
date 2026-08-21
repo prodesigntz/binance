@@ -90,6 +90,8 @@ export function useFilteredMarkets(
           variant: 'spot',
           base,
           quote: spotQuote,
+          name: coin.name,
+          image: coin.image,
           volumeLabel: formatVolume(coin.total_volume),
           leverageLabel: getLeverageLabel(coin.symbol),
           lastPriceLabel,

@@ -45,9 +45,9 @@ export function MarketsScreen(): React.JSX.Element {
   const { colors } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<MarketsStackParamList>>();
   const [search, setSearch] = useState('');
-  const [primaryTab, setPrimaryTab] = useState<PrimaryTabId>('market');
+  const [primaryTab, setPrimaryTab] = useState<PrimaryTabId>('crypto');
   const [secondaryTab, setSecondaryTab] = useState<string>(() =>
-    getInitialSecondaryTab('market')
+    getInitialSecondaryTab('crypto')
   );
   const [activeChip, setActiveChip] = useState('USDT');
   const [optionsExpiry, setOptionsExpiry] = useState(OPTIONS_EXPIRY_LABEL);
@@ -69,7 +69,7 @@ export function MarketsScreen(): React.JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (primaryTab !== 'market') return;
+    if (primaryTab !== 'crypto') return;
     setActiveChip(getFirstChipForMarketSecondary(secondaryTab));
   }, [primaryTab, secondaryTab]);
 
@@ -97,9 +97,9 @@ export function MarketsScreen(): React.JSX.Element {
   );
 
   const marketView: 'crypto' | 'spot' | 'usdm' | 'coinm' | 'options' =
-    primaryTab === 'market'
+    primaryTab === 'crypto'
       ? (secondaryTab as 'crypto' | 'spot' | 'usdm' | 'coinm' | 'options')
-      : 'crypto';
+      : 'spot';
   const { filteredAndSorted, coinToRowProps } = useFilteredMarkets(
     list,
     search,
@@ -107,7 +107,7 @@ export function MarketsScreen(): React.JSX.Element {
     sortDirection,
     handlePressCoin,
     marketView,
-    primaryTab === 'market' ? activeChip : 'USDC'
+    activeChip
   );
 
   if (isError) {
@@ -138,7 +138,7 @@ export function MarketsScreen(): React.JSX.Element {
           // Edit favorites / New Group / Manage Groups - wire to your logic
         }}
       />
-      {primaryTab === 'market' && (
+      {primaryTab === 'crypto' && (
         <MarketsChipsRow
           marketSecondaryTab={secondaryTab}
           activeChip={activeChip}

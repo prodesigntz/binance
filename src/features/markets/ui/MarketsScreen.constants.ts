@@ -11,8 +11,10 @@ export const PAGE = 1;
 
 export const PRIMARY_TABS = [
   { id: 'favorites', label: 'Favorites' },
-  { id: 'market', label: 'Market' },
+  { id: 'crypto', label: 'Crypto' },
+  { id: 'tradfi', label: 'TradFi' },
   { id: 'alpha', label: 'Alpha' },
+  { id: 'prediction', label: 'Prediction' },
   { id: 'grow', label: 'Grow' },
   { id: 'square', label: 'Square' },
   { id: 'data', label: 'Data' },
@@ -41,13 +43,20 @@ export const SECONDARY_TABS_BY_PRIMARY: Record<
     ],
     showEditIcon: true,
   },
-  market: {
+  crypto: {
     tabs: [
-      { id: 'crypto', label: 'Crypto' },
       { id: 'spot', label: 'Spot' },
       { id: 'usdm', label: 'USDⓈ-M' },
       { id: 'coinm', label: 'COIN-M' },
       { id: 'options', label: 'Options' },
+    ],
+  },
+  tradfi: {
+    tabs: [
+      { id: 'all', label: 'All' },
+      { id: 'stocks', label: 'Stocks' },
+      { id: 'forex', label: 'Forex' },
+      { id: 'indices', label: 'Indices' },
     ],
   },
   alpha: {
@@ -57,20 +66,15 @@ export const SECONDARY_TABS_BY_PRIMARY: Record<
       { id: 'bsc', label: 'BSC' },
       { id: 'ethereum', label: 'Ethereum' },
       { id: 'solana', label: 'Solana' },
-      { id: 'base', label: 'Base' },
-      { id: 'arbitrum', label: 'Arbitrum' },
-      { id: 'sonic', label: 'Sonic' },
     ],
   },
+  prediction: null,
   grow: null,
   square: {
     tabs: [
       { id: 'discover', label: 'Discover' },
       { id: 'following', label: 'Following' },
       { id: 'hot', label: 'Hot' },
-      { id: 'news', label: 'News' },
-      { id: 'academy', label: 'Academy' },
-      { id: 'live', label: 'Live' },
     ],
   },
   data: null,
