@@ -9,14 +9,13 @@ import {
   TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { ScreenLayout } from '../../../shared/layout';
 import { useMarkets } from '../../markets/api/useMarkets';
 import { usePortfolioStore, type UserHolding } from '../model/usePortfolioStore';
 import { AssetsHeader } from './AssetsHeader';
 import { AssetsTabStrip } from './AssetsTabStrip';
-import { AssetAllocationCard, type AllocationItem } from './AssetAllocationCard';
 import { HoldingRow } from './HoldingRow';
 
 export function AssetsScreen(): React.JSX.Element {
@@ -27,13 +26,16 @@ export function AssetsScreen(): React.JSX.Element {
     hideBalance,
     hideSmallBalances,
     selectedTab,
+    assetsAccountTab,
     searchQuery,
     holdings,
     toggleHideBalance,
-    toggleHideSmallBalances,
     setSelectedTab,
+    setAssetsAccountTab,
     setSearchQuery,
   } = usePortfolioStore();
+
+  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
 
   // Fetch live market data (top 50 market caps) from CoinGecko
   const { data: marketsList = [], isLoading, refetch } = useMarkets('usd', 50, 1);
@@ -67,7 +69,7 @@ export function AssetsScreen(): React.JSX.Element {
   const holdingsWithValuation = useMemo(() => {
     return holdings.map((h) => {
       let unitPrice = 0;
-      let change24h = 0;
+      let change24h = h.pnlPercent ?? 0.2;
       let imageUrl: string | undefined;
 
       // Special case for stablecoins if API doesn't return them
@@ -78,7 +80,7 @@ export function AssetsScreen(): React.JSX.Element {
       const live = marketMap.get(h.symbol.toLowerCase()) ?? marketMap.get(h.id.toLowerCase());
       if (live) {
         if (live.price > 0) unitPrice = live.price;
-        change24h = live.change24h;
+        if (live.change24h !== 0) change24h = live.change24h;
         imageUrl = live.image;
       }
 
@@ -98,20 +100,6 @@ export function AssetsScreen(): React.JSX.Element {
     return holdingsWithValuation.reduce((acc, curr) => acc + curr.totalValueUsd, 0);
   }, [holdingsWithValuation]);
 
-  // Allocation Items calculation
-  const allocations = useMemo<AllocationItem[]>(() => {
-    if (totalUsdBalance <= 0) return [];
-    return holdingsWithValuation
-      .map((h) => ({
-        symbol: h.symbol,
-        color: h.color,
-        valueUsd: h.totalValueUsd,
-        percent: (h.totalValueUsd / totalUsdBalance) * 100,
-      }))
-      .filter((item) => item.percent >= 0.5)
-      .sort((a, b) => b.valueUsd - a.valueUsd);
-  }, [holdingsWithValuation, totalUsdBalance]);
-
   // Filtered Holdings according to Tab, Small Balances, and Search Query
   const filteredHoldings = useMemo(() => {
     return holdingsWithValuation.filter((h) => {
@@ -120,7 +108,7 @@ export function AssetsScreen(): React.JSX.Element {
         return false;
       }
       // Small balances filter (< $1.00)
-      if (hideSmallBalances && h.totalValueUsd < 1.0) {
+      if (hideSmallBalances && h.totalValueUsd < 0.000001) {
         return false;
       }
       // Search query filter
@@ -159,6 +147,9 @@ export function AssetsScreen(): React.JSX.Element {
           }
           ListHeaderComponent={
             <View>
+              {/* Sub Tab Strip on VERY TOP (Overview, Funding, Earn, Spot, Futures) */}
+              <AssetsTabStrip activeTab={selectedTab} onTabChange={setSelectedTab} />
+
               {/* Main Total Balance & Quick Actions */}
               <AssetsHeader
                 totalUsd={totalUsdBalance}
@@ -167,46 +158,74 @@ export function AssetsScreen(): React.JSX.Element {
                 onToggleHideBalance={toggleHideBalance}
               />
 
-              {/* Sub Tab Strip (Overview, Spot, Futures, etc.) */}
-              <AssetsTabStrip activeTab={selectedTab} onTabChange={setSelectedTab} />
-
-              {/* Portfolio Asset Allocation Visualizer */}
-              <AssetAllocationCard allocations={allocations} hideBalance={hideBalance} />
-
-              {/* Filter Controls Row */}
-              <View style={styles.filterRow}>
-                <TouchableOpacity
-                  style={styles.hideSmallToggle}
-                  onPress={toggleHideSmallBalances}
-                  activeOpacity={0.7}
-                >
-                  <View
-                    style={[
-                      styles.checkbox,
-                      {
-                        borderColor: hideSmallBalances ? colors.primary : colors.border,
-                        backgroundColor: hideSmallBalances ? colors.primary : 'transparent',
-                      },
-                    ]}
+              {/* Sub Header Bar: Assets | Account + Search & Settings icons */}
+              <View style={styles.assetsAccountBar}>
+                <View style={styles.tabsLeft}>
+                  <TouchableOpacity
+                    style={styles.subTabBtn}
+                    onPress={() => setAssetsAccountTab('assets')}
+                    activeOpacity={0.7}
                   >
-                    {hideSmallBalances && (
-                      <Ionicons name="checkmark" size={12} color="#0B0F14" />
-                    )}
-                  </View>
-                  <Text style={[styles.filterText, { color: colors.text2 }]}>
-                    Hide small balances (&lt;$1)
-                  </Text>
-                </TouchableOpacity>
+                    <Text
+                      style={[
+                        styles.subTabTitle,
+                        {
+                          color: assetsAccountTab === 'assets' ? colors.text : colors.text2,
+                          fontWeight: assetsAccountTab === 'assets' ? '700' : '500',
+                        },
+                      ]}
+                    >
+                      Assets
+                    </Text>
+                    {assetsAccountTab === 'assets' && <View style={styles.activeBar} />}
+                  </TouchableOpacity>
 
-                {/* Inline Ticker Search */}
-                <View style={[styles.searchBox, { backgroundColor: colors.card2 }]}>
+                  <TouchableOpacity
+                    style={styles.subTabBtn}
+                    onPress={() => setAssetsAccountTab('account')}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.subTabTitle,
+                        {
+                          color: assetsAccountTab === 'account' ? colors.text : colors.text2,
+                          fontWeight: assetsAccountTab === 'account' ? '700' : '500',
+                        },
+                      ]}
+                    >
+                      Account
+                    </Text>
+                    {assetsAccountTab === 'account' && <View style={styles.activeBar} />}
+                  </TouchableOpacity>
+                </View>
+
+                {/* Right side: Search & Settings Icons */}
+                <View style={styles.iconsRight}>
+                  <TouchableOpacity
+                    onPress={() => setIsSearchOpen(!isSearchOpen)}
+                    style={styles.iconPadding}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="search-outline" size={19} color={colors.text2} />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.iconPadding} activeOpacity={0.7}>
+                    <Feather name="hexagon" size={18} color={colors.text2} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Collapsible Search Bar */}
+              {isSearchOpen && (
+                <View style={[styles.searchBoxRow, { backgroundColor: colors.card2 }]}>
                   <Ionicons name="search" size={14} color={colors.iconMuted} />
                   <TextInput
                     style={[styles.searchInput, { color: colors.text }]}
-                    placeholder="Search coin"
+                    placeholder="Search asset symbol"
                     placeholderTextColor={colors.text2}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
+                    autoFocus
                   />
                   {searchQuery.length > 0 && (
                     <TouchableOpacity onPress={() => setSearchQuery('')}>
@@ -214,7 +233,7 @@ export function AssetsScreen(): React.JSX.Element {
                     </TouchableOpacity>
                   )}
                 </View>
-              </View>
+              )}
             </View>
           }
           renderItem={({ item }) => (
@@ -249,42 +268,55 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 24,
   },
-  filterRow: {
+  assetsAccountBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginTop: 4,
+    paddingTop: 14,
+    paddingBottom: 8,
   },
-  hideSmallToggle: {
+  tabsLeft: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+  subTabBtn: {
+    position: 'relative',
+    paddingBottom: 6,
+  },
+  subTabTitle: {
+    fontSize: 16,
+  },
+  activeBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: '#F0B90B',
+    borderRadius: 2,
+  },
+  iconsRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 16,
   },
-  checkbox: {
-    width: 16,
-    height: 16,
-    borderRadius: 3,
-    borderWidth: 1.5,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 6,
+  iconPadding: {
+    padding: 2,
   },
-  filterText: {
-    fontSize: 12,
-  },
-  searchBox: {
+  searchBoxRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 32,
-    borderRadius: 16,
-    paddingHorizontal: 10,
-    width: 130,
-    gap: 4,
+    height: 36,
+    borderRadius: 18,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    gap: 6,
   },
   searchInput: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 13,
     padding: 0,
   },
   emptyState: {

@@ -10,17 +10,17 @@ interface AssetsTabStripProps {
 
 const ASSETS_TABS: { id: AssetsTabId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
-  { id: 'spot', label: 'Spot' },
-  { id: 'futures', label: 'Futures' },
   { id: 'funding', label: 'Funding' },
   { id: 'earn', label: 'Earn' },
+  { id: 'spot', label: 'Spot' },
+  { id: 'futures', label: 'Futures' },
 ];
 
 export function AssetsTabStrip({ activeTab, onTabChange }: AssetsTabStripProps): React.JSX.Element {
   const { colors } = useTheme();
 
   return (
-    <View style={[styles.container, { borderBottomColor: colors.border }]}>
+    <View style={styles.container}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -39,14 +39,14 @@ export function AssetsTabStrip({ activeTab, onTabChange }: AssetsTabStripProps):
                 style={[
                   styles.tabLabel,
                   {
-                    color: isActive ? colors.text : colors.text2,
-                    fontWeight: isActive ? '700' : '500',
+                    color: isActive ? '#FFFFFF' : 'rgba(255, 255, 255, 0.45)',
+                    fontWeight: isActive ? '700' : '600',
+                    fontSize: 18,
                   },
                 ]}
               >
                 {tab.label}
               </Text>
-              {isActive && <View style={[styles.activeIndicator, { backgroundColor: colors.primary }]} />}
             </TouchableOpacity>
           );
         })}
@@ -57,26 +57,16 @@ export function AssetsTabStrip({ activeTab, onTabChange }: AssetsTabStripProps):
 
 const styles = StyleSheet.create({
   container: {
-    borderBottomWidth: 1,
-    paddingTop: 4,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   scrollContent: {
     paddingHorizontal: 16,
-    gap: 24,
+    gap: 20,
   },
   tabBtn: {
-    paddingVertical: 10,
-    position: 'relative',
+    paddingVertical: 6,
     alignItems: 'center',
   },
-  tabLabel: {
-    fontSize: 14,
-  },
-  activeIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    height: 3,
-    width: '100%',
-    borderRadius: 2,
-  },
+  tabLabel: {},
 });

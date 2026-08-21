@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../../app/providers/ThemeProvider';
-import { PercentBadge } from '../../../shared/ui/PercentBadge';
 import type { UserHolding } from '../model/usePortfolioStore';
 
 interface HoldingRowProps {
@@ -11,64 +10,106 @@ interface HoldingRowProps {
   imageUrl?: string;
   hideBalance: boolean;
   onPress: () => void;
+  onEarnPress?: () => void;
+  onTradePress?: () => void;
 }
 
 export function HoldingRow({
   holding,
   unitPrice,
-  change24h = 0,
+  change24h = 0.2,
   imageUrl,
   hideBalance,
   onPress,
+  onEarnPress,
+  onTradePress,
 }: HoldingRowProps): React.JSX.Element {
   const { colors } = useTheme();
 
   const totalValueUsd = holding.amount * unitPrice;
-  const formattedAmount =
-    holding.amount >= 1000
-      ? holding.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })
-      : holding.amount < 0.01
-      ? holding.amount.toFixed(6)
-      : holding.amount.toFixed(4);
 
-  const formattedUsd = `$${totalValueUsd.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  // Format amount with full precision for small balances or standard formatting
+  const formattedAmount = hideBalance
+    ? '••••••••'
+    : holding.amount >= 1
+    ? holding.amount.toFixed(8)
+    : holding.amount.toFixed(8);
+
+  const formattedEquivalent = hideBalance
+    ? '••••••'
+    : totalValueUsd >= 0.00001
+    ? `${totalValueUsd.toFixed(6)} USDT`
+    : totalValueUsd > 0
+    ? `${totalValueUsd.toFixed(8)} USDT`
+    : '';
+
+  const isPnlPositive = change24h >= 0;
 
   return (
     <TouchableOpacity
-      style={[styles.container, { borderBottomColor: colors.border }]}
+      style={[styles.container, { borderBottomColor: 'rgba(255,255,255,0.03)' }]}
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
-      {/* Coin Icon & Name */}
-      <View style={styles.leftCol}>
-        {imageUrl ? (
-          <Image source={{ uri: imageUrl }} style={styles.coinLogo} />
-        ) : (
-          <View style={[styles.avatarFallback, { backgroundColor: holding.color }]}>
-            <Text style={styles.avatarText}>{holding.symbol.slice(0, 2)}</Text>
+      {/* Top Part: Info & Amounts */}
+      <View style={styles.topRow}>
+        {/* Left: Logo & Names */}
+        <View style={styles.leftCol}>
+          {imageUrl ? (
+            <Image source={{ uri: imageUrl }} style={styles.coinLogo} />
+          ) : (
+            <View style={[styles.avatarFallback, { backgroundColor: holding.color }]}>
+              <Text style={styles.avatarText}>{holding.symbol.slice(0, 2)}</Text>
+            </View>
+          )}
+          <View style={styles.nameBlock}>
+            <Text style={[styles.symbol, { color: colors.text }]}>{holding.symbol}</Text>
+            <Text style={[styles.name, { color: colors.text2 }]}>{holding.name}</Text>
           </View>
-        )}
-        <View style={styles.nameBlock}>
-          <Text style={[styles.symbol, { color: colors.text }]}>{holding.symbol}</Text>
-          <Text style={[styles.name, { color: colors.text2 }]}>{holding.name}</Text>
+        </View>
+
+        {/* Right: Balance & Value */}
+        <View style={styles.rightCol}>
+          <Text style={[styles.amountText, { color: colors.text }]}>{formattedAmount}</Text>
+          {formattedEquivalent ? (
+            <Text style={[styles.equivalentText, { color: colors.text2 }]}>
+              {formattedEquivalent}
+            </Text>
+          ) : null}
         </View>
       </View>
 
-      {/* Amount & Valuation */}
-      <View style={styles.rightCol}>
-        <Text style={[styles.usdValue, { color: colors.text }]}>
-          {hideBalance ? '••••••' : formattedUsd}
-        </Text>
-        <View style={styles.subRightRow}>
-          <Text style={[styles.holdingAmount, { color: colors.text2 }]}>
-            {hideBalance ? '••••' : `${formattedAmount} ${holding.symbol}`}
-          </Text>
-          <View style={styles.badgeWrapper}>
-            <PercentBadge value={change24h} />
+      {/* Middle/Bottom Part: Today's PNL & Action Pills (Earn / Trade) */}
+      <View style={styles.bottomRow}>
+        {holding.symbol !== 'USDT' ? (
+          <View style={styles.pnlContainer}>
+            <Text style={[styles.pnlLabel, { color: colors.text2 }]}>Today's PNL</Text>
+            <Text style={[styles.pnlValue, { color: isPnlPositive ? '#0ecb81' : '#f6465d' }]}>
+              {hideBalance
+                ? '••••'
+                : `${isPnlPositive ? '+' : ''}0 USDT(${isPnlPositive ? '+' : ''}${change24h.toFixed(2)}%)`}
+            </Text>
           </View>
+        ) : (
+          <View />
+        )}
+
+        {/* Action Pills: Earn & Trade */}
+        <View style={styles.actionPills}>
+          <TouchableOpacity
+            style={styles.pillBtn}
+            onPress={onEarnPress ?? onPress}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.pillText}>Earn</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.pillBtn}
+            onPress={onTradePress ?? onPress}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.pillText}>Trade</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
@@ -77,12 +118,14 @@ export function HoldingRow({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+  },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
   },
   leftCol: {
     flexDirection: 'row',
@@ -90,15 +133,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   coinLogo: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     marginRight: 10,
   },
   avatarFallback: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -106,36 +149,63 @@ const styles = StyleSheet.create({
   avatarText: {
     color: '#ffffff',
     fontWeight: '700',
-    fontSize: 12,
+    fontSize: 11,
   },
   nameBlock: {
     justifyContent: 'center',
   },
   symbol: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
   },
   name: {
     fontSize: 12,
-    marginTop: 2,
+    marginTop: 1,
   },
   rightCol: {
     alignItems: 'flex-end',
   },
-  usdValue: {
-    fontSize: 15,
+  amountText: {
+    fontSize: 16,
     fontWeight: '700',
+    letterSpacing: -0.2,
   },
-  subRightRow: {
+  equivalentText: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  bottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 3,
+    justifyContent: 'space-between',
+    marginTop: 6,
+  },
+  pnlContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
   },
-  holdingAmount: {
-    fontSize: 12,
+  pnlLabel: {
+    fontSize: 11,
   },
-  badgeWrapper: {
-    marginLeft: 2,
+  pnlValue: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  actionPills: {
+    flexDirection: 'row',
+    gap: 8,
+    marginLeft: 'auto',
+  },
+  pillBtn: {
+    backgroundColor: '#2B313A',
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+    borderRadius: 6,
+  },
+  pillText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
