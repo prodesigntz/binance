@@ -17,6 +17,7 @@ import { usePortfolioStore, type UserHolding } from '../model/usePortfolioStore'
 import { AssetsHeader } from './AssetsHeader';
 import { AssetsTabStrip } from './AssetsTabStrip';
 import { HoldingRow } from './HoldingRow';
+import { AddFundsSheet } from './AddFundsSheet';
 
 export function AssetsScreen(): React.JSX.Element {
   const { colors } = useTheme();
@@ -36,6 +37,7 @@ export function AssetsScreen(): React.JSX.Element {
   } = usePortfolioStore();
 
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+  const [isAddFundsOpen, setIsAddFundsOpen] = React.useState(false);
 
   // Fetch live market data (top 50 market caps) from CoinGecko
   const { data: marketsList = [], isLoading, refetch } = useMarkets('usd', 50, 1);
@@ -156,6 +158,11 @@ export function AssetsScreen(): React.JSX.Element {
                 btcPrice={btcPrice}
                 hideBalance={hideBalance}
                 onToggleHideBalance={toggleHideBalance}
+                onQuickAction={(action) => {
+                  if (action === 'deposit') {
+                    setIsAddFundsOpen(true);
+                  }
+                }}
               />
 
               {/* Sub Header Bar: Assets | Account + Search & Settings icons */}
@@ -255,6 +262,12 @@ export function AssetsScreen(): React.JSX.Element {
             </View>
           }
           contentContainerStyle={styles.listContent}
+        />
+
+        {/* Select Deposit Method Bottom Sheet */}
+        <AddFundsSheet
+          visible={isAddFundsOpen}
+          onClose={() => setIsAddFundsOpen(false)}
         />
       </View>
     </ScreenLayout>
