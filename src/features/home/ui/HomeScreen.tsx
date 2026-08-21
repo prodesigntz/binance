@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   Dimensions,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
@@ -16,6 +15,10 @@ import { ScreenLayout } from '../../../shared/layout';
 import { useMarkets } from '../../markets/api/useMarkets';
 import { CryptoIcon } from '../../../components/CryptoIcon';
 import { useNavigation } from '@react-navigation/native';
+import { AddFundsSheet } from '../../assets/ui/AddFundsSheet';
+import { SelectAssetSheet, type CoinAsset } from '../../assets/ui/SelectAssetSheet';
+import { ChooseNetworkSheet, type CryptoNetwork } from '../../assets/ui/ChooseNetworkSheet';
+import { DepositDetailModal } from '../../assets/ui/DepositDetailModal';
 
 const { width } = Dimensions.get('window');
 
@@ -59,6 +62,14 @@ export function HomeScreen(): React.JSX.Element {
 
   // Header Segment Control
   const [headerSegment, setHeaderSegment] = useState<'exchange' | 'wallet'>('exchange');
+
+  // Deposit Flow Modals State
+  const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
+  const [isSelectAssetOpen, setIsSelectAssetOpen] = useState(false);
+  const [isChooseNetworkOpen, setIsChooseNetworkOpen] = useState(false);
+  const [isDepositDetailOpen, setIsDepositDetailOpen] = useState(false);
+  const [selectedDepositCoin, setSelectedDepositCoin] = useState<CoinAsset | null>(null);
+  const [selectedDepositNetwork, setSelectedDepositNetwork] = useState<CryptoNetwork | null>(null);
 
   // Watchlist Category Tabs
   const [activeMarketTab, setActiveMarketTab] = useState<'Hot' | 'Favorites' | 'TradFi' | 'Alpha' | 'New' | 'Gainers'>('Hot');
@@ -155,37 +166,104 @@ export function HomeScreen(): React.JSX.Element {
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          {/* ================= QUICK ACTIONS GRID ================= */}
-          <View style={styles.quickActionsRow}>
-            {/* P2P */}
-            <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
-              <View style={styles.actionIconBox}>
-                <MaterialCommunityIcons name="account-switch-outline" size={24} color="#F0B90B" />
-              </View>
-              <Text style={styles.actionLabel}>P2P</Text>
-            </TouchableOpacity>
+          {/* ================= SEARCH BAR ================= */}
+          <TouchableOpacity style={styles.searchBarBox} activeOpacity={0.8}>
+            <View style={styles.searchLeftRow}>
+              <Text style={styles.flameText}>🔥</Text>
+              <Text style={styles.searchPlaceholderText}>METAB hot search</Text>
+            </View>
+            <Ionicons name="search" size={16} color="#848E9C" />
+          </TouchableOpacity>
 
-            {/* Loans */}
-            <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
-              <View style={styles.actionIconBox}>
-                <MaterialCommunityIcons name="hand-coin-outline" size={24} color="#F0B90B" />
-              </View>
-              <Text style={styles.actionLabel}>Loans</Text>
-            </TouchableOpacity>
+          {/* ================= HOLDINGS VALUE & ADD FUNDS ================= */}
+          <View style={styles.balanceHeaderSection}>
+            <View style={styles.balanceLeftCol}>
+              <TouchableOpacity style={styles.estTitleRow} activeOpacity={0.7}>
+                <Text style={styles.estTitleText}>Est. Total Value (USDT)</Text>
+                <Ionicons name="chevron-up" size={14} color="#848E9C" style={{ marginLeft: 4 }} />
+              </TouchableOpacity>
 
-            {/* More */}
-            <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
-              <View style={styles.actionIconBox}>
-                <Ionicons name="grid-outline" size={22} color="#F0B90B" />
-              </View>
-              <Text style={styles.actionLabel}>More</Text>
+              <Text style={styles.homeMainBalance}>100.63</Text>
+              <Text style={styles.homeUsdApprox}>≈ $100.63</Text>
+
+              <TouchableOpacity style={styles.todayPnlRow} activeOpacity={0.7}>
+                <Text style={styles.todayPnlLabel}>Today's PNL</Text>
+                <Text style={styles.todayPnlValue}>+0.000027 USDT(+0.00%)</Text>
+                <Ionicons name="chevron-down" size={12} color="#0ECB81" style={{ marginLeft: 2 }} />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.homeAddFundsBtn}
+              onPress={() => setIsAddFundsOpen(true)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.homeAddFundsText}>Add Funds</Text>
             </TouchableOpacity>
           </View>
 
-          {/* ================= WOTD BANNER CAROUSEL CARD ================= */}
+          {/* ================= 2-ROW QUICK ACTIONS GRID ================= */}
+          <View style={styles.quickActionsGrid}>
+            {/* Row 1: Referral, Spot, Rewards Hub, Earn */}
+            <View style={styles.quickRow}>
+              <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+                <View style={styles.actionIconBox}>
+                  <Ionicons name="person-add-outline" size={22} color="#F0B90B" />
+                </View>
+                <Text style={styles.actionLabel}>Referral</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+                <View style={styles.actionIconBox}>
+                  <MaterialCommunityIcons name="target" size={22} color="#F0B90B" />
+                </View>
+                <Text style={styles.actionLabel}>Spot</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+                <View style={styles.actionIconBox}>
+                  <MaterialCommunityIcons name="ticket-percent-outline" size={22} color="#F0B90B" />
+                </View>
+                <Text style={styles.actionLabel}>Rewards Hub</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+                <View style={styles.actionIconBox}>
+                  <MaterialCommunityIcons name="piggy-bank-outline" size={22} color="#F0B90B" />
+                </View>
+                <Text style={styles.actionLabel}>Earn</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Row 2: P2P, Loans, More */}
+            <View style={styles.quickRowLeft}>
+              <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+                <View style={styles.actionIconBox}>
+                  <MaterialCommunityIcons name="account-switch-outline" size={22} color="#F0B90B" />
+                </View>
+                <Text style={styles.actionLabel}>P2P</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+                <View style={styles.actionIconBox}>
+                  <MaterialCommunityIcons name="hand-coin-outline" size={22} color="#F0B90B" />
+                </View>
+                <Text style={styles.actionLabel}>Loans</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionItem} activeOpacity={0.7}>
+                <View style={styles.actionIconBox}>
+                  <Ionicons name="grid-outline" size={20} color="#F0B90B" />
+                </View>
+                <Text style={styles.actionLabel}>More</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* ================= ANNOUNCEMENT BANNER CARD ================= */}
           <View style={styles.wotdCard}>
             <View style={styles.wotdHeader}>
-              <Text style={styles.wotdTitle}>WOTD - DTC Transfer Binance</Text>
+              <Text style={styles.wotdTitle}>ETH Option Trading Cup</Text>
               <TouchableOpacity style={{ padding: 2 }} activeOpacity={0.7}>
                 <Ionicons name="close" size={16} color="#848E9C" />
               </TouchableOpacity>
@@ -193,9 +271,9 @@ export function HomeScreen(): React.JSX.Element {
 
             <View style={styles.wotdBody}>
               <View style={styles.wotdIconBox}>
-                <Ionicons name="grid" size={20} color="#F0B90B" />
+                <MaterialCommunityIcons name="trophy-outline" size={20} color="#F0B90B" />
               </View>
-              <Text style={styles.wotdDesc}>Solve Daily Words to Unlock Rewards!</Text>
+              <Text style={styles.wotdDesc}>Share a Prize Pool of 20,000 USDT!</Text>
               <TouchableOpacity style={styles.joinBtn} activeOpacity={0.8}>
                 <Text style={styles.joinBtnText}>Join</Text>
               </TouchableOpacity>
@@ -250,7 +328,7 @@ export function HomeScreen(): React.JSX.Element {
 
           {/* ================= MARKETS & WATCHLIST SECTION ================= */}
           <View style={styles.marketsSection}>
-            {/* Main Category Tabs (Favorites, Hot, TradFi, Alpha, New, Gainers) */}
+            {/* Main Category Tabs */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.marketTabsRow}>
               {(['Favorites', 'Hot', 'TradFi', 'Alpha', 'New', 'Gainers'] as const).map((tab) => (
                 <TouchableOpacity
@@ -272,7 +350,7 @@ export function HomeScreen(): React.JSX.Element {
               ))}
             </ScrollView>
 
-            {/* Sub Category Tabs (Crypto, Futures, Stocks) */}
+            {/* Sub Category Tabs */}
             <View style={styles.subTabsRow}>
               {(['Crypto', 'Futures', 'Stocks'] as const).map((sub) => (
                 <TouchableOpacity
@@ -502,6 +580,49 @@ export function HomeScreen(): React.JSX.Element {
         <TouchableOpacity style={styles.fabBtn} activeOpacity={0.85}>
           <Ionicons name="add" size={28} color="#0B0F14" />
         </TouchableOpacity>
+
+        {/* ================= DEPOSIT FLOW MODALS ================= */}
+        <AddFundsSheet
+          visible={isAddFundsOpen}
+          onClose={() => setIsAddFundsOpen(false)}
+          onSelectMethod={(method) => {
+            if (method === 'deposit') {
+              setIsSelectAssetOpen(true);
+            }
+          }}
+        />
+
+        <SelectAssetSheet
+          visible={isSelectAssetOpen}
+          onClose={() => setIsSelectAssetOpen(false)}
+          onSelectCoin={(coin) => {
+            setSelectedDepositCoin(coin);
+            setIsSelectAssetOpen(false);
+            setIsChooseNetworkOpen(true);
+          }}
+        />
+
+        <ChooseNetworkSheet
+          visible={isChooseNetworkOpen}
+          coinSymbol={selectedDepositCoin?.symbol ?? 'USDT'}
+          onClose={() => setIsChooseNetworkOpen(false)}
+          onSelectNetwork={(net) => {
+            setSelectedDepositNetwork(net);
+            setIsChooseNetworkOpen(false);
+            setIsDepositDetailOpen(true);
+          }}
+        />
+
+        <DepositDetailModal
+          visible={isDepositDetailOpen}
+          coin={selectedDepositCoin}
+          network={selectedDepositNetwork}
+          onClose={() => setIsDepositDetailOpen(false)}
+          onSwitchNetwork={() => {
+            setIsDepositDetailOpen(false);
+            setIsChooseNetworkOpen(true);
+          }}
+        />
       </View>
     </ScreenLayout>
   );
@@ -578,15 +699,104 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 40,
   },
-  quickActionsRow: {
+  searchBarBox: {
     flexDirection: 'row',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 20,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#212A34',
+    height: 38,
+    borderRadius: 19,
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 16,
+    paddingHorizontal: 14,
+  },
+  searchLeftRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  flameText: {
+    fontSize: 14,
+  },
+  searchPlaceholderText: {
+    color: '#848E9C',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  balanceHeaderSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginBottom: 20,
+  },
+  balanceLeftCol: {
+    flex: 1,
+  },
+  estTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  estTitleText: {
+    color: '#848E9C',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  homeMainBalance: {
+    color: '#FFFFFF',
+    fontSize: 32,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+  },
+  homeUsdApprox: {
+    color: '#848E9C',
+    fontSize: 13,
+    marginTop: 2,
+    marginBottom: 6,
+  },
+  todayPnlRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  todayPnlLabel: {
+    color: '#848E9C',
+    fontSize: 12,
+    marginRight: 6,
+  },
+  todayPnlValue: {
+    color: '#0ECB81',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  homeAddFundsBtn: {
+    backgroundColor: '#F0B90B',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  homeAddFundsText: {
+    color: '#0B0F14',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  quickActionsGrid: {
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    gap: 16,
+  },
+  quickRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  quickRowLeft: {
+    flexDirection: 'row',
     gap: 32,
   },
   actionItem: {
     alignItems: 'center',
+    width: 68,
   },
   actionIconBox: {
     width: 48,
@@ -600,7 +810,8 @@ const styles = StyleSheet.create({
   actionLabel: {
     color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
+    textAlign: 'center',
   },
   wotdCard: {
     backgroundColor: '#1E2630',
