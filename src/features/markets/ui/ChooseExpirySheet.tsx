@@ -38,7 +38,7 @@ export function ChooseExpirySheet({
   options,
   onConfirm,
   onCancel,
-}: Props): React.JSX.Element {
+}: Props): React.JSX.Element | null {
   const { colors, typography } = useTheme();
   const insets = useSafeAreaInsets();
   const [draftExpiry, setDraftExpiry] = useState(selectedExpiry);

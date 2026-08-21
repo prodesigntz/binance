@@ -41,7 +41,7 @@ export function PairTile({
           </Text>
           <Text
             style={[
-              typography.caption,
+              typography.sub,
               styles.change,
               { color: isUp ? colors.green : colors.red },
             ]}
