@@ -18,9 +18,12 @@ import { AssetsHeader } from './AssetsHeader';
 import { AssetsTabStrip } from './AssetsTabStrip';
 import { HoldingRow } from './HoldingRow';
 import { AddFundsSheet } from './AddFundsSheet';
+import { SendSheet } from './SendSheet';
 import { SelectAssetSheet, type CoinAsset } from './SelectAssetSheet';
 import { ChooseNetworkSheet, type CryptoNetwork } from './ChooseNetworkSheet';
 import { DepositDetailModal } from './DepositDetailModal';
+import { EnterAddressModal } from './EnterAddressModal';
+import { ChooseWithdrawNetworkSheet, type WithdrawNetwork } from './ChooseWithdrawNetworkSheet';
 
 export function AssetsScreen(): React.JSX.Element {
   const { colors } = useTheme();
@@ -41,12 +44,18 @@ export function AssetsScreen(): React.JSX.Element {
 
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [isAddFundsOpen, setIsAddFundsOpen] = React.useState(false);
+  const [isSendSheetOpen, setIsSendSheetOpen] = React.useState(false);
   const [isSelectAssetOpen, setIsSelectAssetOpen] = React.useState(false);
   const [isChooseNetworkOpen, setIsChooseNetworkOpen] = React.useState(false);
   const [isDepositDetailOpen, setIsDepositDetailOpen] = React.useState(false);
 
+  const [assetFlowMode, setAssetFlowMode] = React.useState<'deposit' | 'withdraw'>('deposit');
+  const [isEnterAddressOpen, setIsEnterAddressOpen] = React.useState(false);
+  const [isChooseWithdrawNetworkOpen, setIsChooseWithdrawNetworkOpen] = React.useState(false);
+
   const [selectedDepositCoin, setSelectedDepositCoin] = React.useState<CoinAsset | null>(null);
   const [selectedDepositNetwork, setSelectedDepositNetwork] = React.useState<CryptoNetwork | null>(null);
+  const [selectedWithdrawNetwork, setSelectedWithdrawNetwork] = React.useState<WithdrawNetwork | null>(null);
 
   // Fetch live market data (top 50 market caps) from CoinGecko
   const { data: marketsList = [], isLoading, refetch } = useMarkets('usd', 50, 1);
@@ -170,6 +179,8 @@ export function AssetsScreen(): React.JSX.Element {
                 onQuickAction={(action) => {
                   if (action === 'deposit') {
                     setIsAddFundsOpen(true);
+                  } else if (action === 'send' || action === 'withdraw') {
+                    setIsSendSheetOpen(true);
                   }
                 }}
               />
@@ -279,6 +290,19 @@ export function AssetsScreen(): React.JSX.Element {
           onClose={() => setIsAddFundsOpen(false)}
           onSelectMethod={(method) => {
             if (method === 'deposit') {
+              setAssetFlowMode('deposit');
+              setIsSelectAssetOpen(true);
+            }
+          }}
+        />
+
+        {/* Select Withdraw Method Bottom Sheet (Send / Withdraw) */}
+        <SendSheet
+          visible={isSendSheetOpen}
+          onClose={() => setIsSendSheetOpen(false)}
+          onSelectMethod={(method) => {
+            if (method === 'withdraw') {
+              setAssetFlowMode('withdraw');
               setIsSelectAssetOpen(true);
             }
           }}
@@ -291,11 +315,15 @@ export function AssetsScreen(): React.JSX.Element {
           onSelectCoin={(coin) => {
             setSelectedDepositCoin(coin);
             setIsSelectAssetOpen(false);
-            setIsChooseNetworkOpen(true);
+            if (assetFlowMode === 'deposit') {
+              setIsChooseNetworkOpen(true);
+            } else {
+              setIsEnterAddressOpen(true);
+            }
           }}
         />
 
-        {/* Step 3: Choose Network Bottom Sheet */}
+        {/* Step 3 (Deposit Flow): Choose Network Bottom Sheet */}
         <ChooseNetworkSheet
           visible={isChooseNetworkOpen}
           coinSymbol={selectedDepositCoin?.symbol ?? 'USDT'}
@@ -307,7 +335,7 @@ export function AssetsScreen(): React.JSX.Element {
           }}
         />
 
-        {/* Step 4: Final Deposit Address & QR Code Modal */}
+        {/* Step 4 (Deposit Flow): Final Deposit Address & QR Code Modal */}
         <DepositDetailModal
           visible={isDepositDetailOpen}
           coin={selectedDepositCoin}
@@ -316,6 +344,29 @@ export function AssetsScreen(): React.JSX.Element {
           onSwitchNetwork={() => {
             setIsDepositDetailOpen(false);
             setIsChooseNetworkOpen(true);
+          }}
+        />
+
+        {/* Step 3 (Withdraw Flow): Enter Address Modal */}
+        <EnterAddressModal
+          visible={isEnterAddressOpen}
+          coin={selectedDepositCoin}
+          selectedNetwork={selectedWithdrawNetwork}
+          onClose={() => setIsEnterAddressOpen(false)}
+          onOpenNetworkSheet={() => setIsChooseWithdrawNetworkOpen(true)}
+          onProceedNext={(addr, net) => {
+            setIsEnterAddressOpen(false);
+          }}
+        />
+
+        {/* Step 4 (Withdraw Flow): Choose Withdraw Network Sheet */}
+        <ChooseWithdrawNetworkSheet
+          visible={isChooseWithdrawNetworkOpen}
+          selectedNetworkId={selectedWithdrawNetwork?.id}
+          onClose={() => setIsChooseWithdrawNetworkOpen(false)}
+          onSelectNetwork={(net) => {
+            setSelectedWithdrawNetwork(net);
+            setIsChooseWithdrawNetworkOpen(false);
           }}
         />
       </View>
