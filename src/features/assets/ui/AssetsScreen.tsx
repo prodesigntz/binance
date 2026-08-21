@@ -352,8 +352,8 @@ export function AssetsScreen(): React.JSX.Element {
           visible={isEnterAddressOpen}
           coin={selectedDepositCoin}
           selectedNetwork={selectedWithdrawNetwork}
+          onSelectNetwork={setSelectedWithdrawNetwork}
           onClose={() => setIsEnterAddressOpen(false)}
-          onOpenNetworkSheet={() => setIsChooseWithdrawNetworkOpen(true)}
           onProceedNext={(addr, net) => {
             setIsEnterAddressOpen(false);
           }}
