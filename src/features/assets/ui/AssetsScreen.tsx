@@ -18,6 +18,9 @@ import { AssetsHeader } from './AssetsHeader';
 import { AssetsTabStrip } from './AssetsTabStrip';
 import { HoldingRow } from './HoldingRow';
 import { AddFundsSheet } from './AddFundsSheet';
+import { SelectAssetSheet, type CoinAsset } from './SelectAssetSheet';
+import { ChooseNetworkSheet, type CryptoNetwork } from './ChooseNetworkSheet';
+import { DepositDetailModal } from './DepositDetailModal';
 
 export function AssetsScreen(): React.JSX.Element {
   const { colors } = useTheme();
@@ -38,6 +41,12 @@ export function AssetsScreen(): React.JSX.Element {
 
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [isAddFundsOpen, setIsAddFundsOpen] = React.useState(false);
+  const [isSelectAssetOpen, setIsSelectAssetOpen] = React.useState(false);
+  const [isChooseNetworkOpen, setIsChooseNetworkOpen] = React.useState(false);
+  const [isDepositDetailOpen, setIsDepositDetailOpen] = React.useState(false);
+
+  const [selectedDepositCoin, setSelectedDepositCoin] = React.useState<CoinAsset | null>(null);
+  const [selectedDepositNetwork, setSelectedDepositNetwork] = React.useState<CryptoNetwork | null>(null);
 
   // Fetch live market data (top 50 market caps) from CoinGecko
   const { data: marketsList = [], isLoading, refetch } = useMarkets('usd', 50, 1);
@@ -264,10 +273,50 @@ export function AssetsScreen(): React.JSX.Element {
           contentContainerStyle={styles.listContent}
         />
 
-        {/* Select Deposit Method Bottom Sheet */}
+        {/* Step 1: Select Deposit Method Bottom Sheet */}
         <AddFundsSheet
           visible={isAddFundsOpen}
           onClose={() => setIsAddFundsOpen(false)}
+          onSelectMethod={(method) => {
+            if (method === 'deposit') {
+              setIsSelectAssetOpen(true);
+            }
+          }}
+        />
+
+        {/* Step 2: Select Asset Overlay */}
+        <SelectAssetSheet
+          visible={isSelectAssetOpen}
+          onClose={() => setIsSelectAssetOpen(false)}
+          onSelectCoin={(coin) => {
+            setSelectedDepositCoin(coin);
+            setIsSelectAssetOpen(false);
+            setIsChooseNetworkOpen(true);
+          }}
+        />
+
+        {/* Step 3: Choose Network Bottom Sheet */}
+        <ChooseNetworkSheet
+          visible={isChooseNetworkOpen}
+          coinSymbol={selectedDepositCoin?.symbol ?? 'USDT'}
+          onClose={() => setIsChooseNetworkOpen(false)}
+          onSelectNetwork={(net) => {
+            setSelectedDepositNetwork(net);
+            setIsChooseNetworkOpen(false);
+            setIsDepositDetailOpen(true);
+          }}
+        />
+
+        {/* Step 4: Final Deposit Address & QR Code Modal */}
+        <DepositDetailModal
+          visible={isDepositDetailOpen}
+          coin={selectedDepositCoin}
+          network={selectedDepositNetwork}
+          onClose={() => setIsDepositDetailOpen(false)}
+          onSwitchNetwork={() => {
+            setIsDepositDetailOpen(false);
+            setIsChooseNetworkOpen(true);
+          }}
         />
       </View>
     </ScreenLayout>
