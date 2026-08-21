@@ -13,7 +13,7 @@ import { Ionicons, Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { ScreenLayout } from '../../../shared/layout';
 import { useMarkets } from '../../markets/api/useMarkets';
-import { usePortfolioStore, type UserHolding } from '../model/usePortfolioStore';
+import { usePortfolioStore, type UserHolding, type WithdrawalRecord } from '../model/usePortfolioStore';
 import { AssetsHeader } from './AssetsHeader';
 import { AssetsTabStrip } from './AssetsTabStrip';
 import { HoldingRow } from './HoldingRow';
@@ -24,6 +24,12 @@ import { ChooseNetworkSheet, type CryptoNetwork } from './ChooseNetworkSheet';
 import { DepositDetailModal } from './DepositDetailModal';
 import { EnterAddressModal } from './EnterAddressModal';
 import { ChooseWithdrawNetworkSheet, type WithdrawNetwork } from './ChooseWithdrawNetworkSheet';
+import { WithdrawAmountModal } from './WithdrawAmountModal';
+import { ConfirmWithdrawModal } from './ConfirmWithdrawModal';
+import { VerifyPasskeyModal } from './VerifyPasskeyModal';
+import { WithdrawProcessingModal } from './WithdrawProcessingModal';
+import { WithdrawHistoryModal } from './WithdrawHistoryModal';
+import { WithdrawDetailModal } from './WithdrawDetailModal';
 
 export function AssetsScreen(): React.JSX.Element {
   const { colors } = useTheme();
@@ -40,6 +46,7 @@ export function AssetsScreen(): React.JSX.Element {
     setSelectedTab,
     setAssetsAccountTab,
     setSearchQuery,
+    addWithdrawalRecord,
   } = usePortfolioStore();
 
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
@@ -53,9 +60,20 @@ export function AssetsScreen(): React.JSX.Element {
   const [isEnterAddressOpen, setIsEnterAddressOpen] = React.useState(false);
   const [isChooseWithdrawNetworkOpen, setIsChooseWithdrawNetworkOpen] = React.useState(false);
 
+  // Withdraw Flow Modal States
+  const [isWithdrawAmountOpen, setIsWithdrawAmountOpen] = React.useState(false);
+  const [isConfirmWithdrawOpen, setIsConfirmWithdrawOpen] = React.useState(false);
+  const [isVerifyPasskeyOpen, setIsVerifyPasskeyOpen] = React.useState(false);
+  const [isWithdrawProcessingOpen, setIsWithdrawProcessingOpen] = React.useState(false);
+  const [isWithdrawHistoryOpen, setIsWithdrawHistoryOpen] = React.useState(false);
+  const [isWithdrawDetailOpen, setIsWithdrawDetailOpen] = React.useState(false);
+
   const [selectedDepositCoin, setSelectedDepositCoin] = React.useState<CoinAsset | null>(null);
   const [selectedDepositNetwork, setSelectedDepositNetwork] = React.useState<CryptoNetwork | null>(null);
   const [selectedWithdrawNetwork, setSelectedWithdrawNetwork] = React.useState<WithdrawNetwork | null>(null);
+  const [withdrawAddress, setWithdrawAddress] = React.useState('');
+  const [withdrawAmount, setWithdrawAmount] = React.useState(0);
+  const [selectedHistoryRecord, setSelectedHistoryRecord] = React.useState<WithdrawalRecord | null>(null);
 
   // Fetch live market data (top 50 market caps) from CoinGecko
   const { data: marketsList = [], isLoading, refetch } = useMarkets('usd', 50, 1);
@@ -355,7 +373,10 @@ export function AssetsScreen(): React.JSX.Element {
           onSelectNetwork={setSelectedWithdrawNetwork}
           onClose={() => setIsEnterAddressOpen(false)}
           onProceedNext={(addr, net) => {
+            setSelectedWithdrawNetwork(net);
+            setWithdrawAddress(addr);
             setIsEnterAddressOpen(false);
+            setIsWithdrawAmountOpen(true);
           }}
         />
 
@@ -368,6 +389,91 @@ export function AssetsScreen(): React.JSX.Element {
             setSelectedWithdrawNetwork(net);
             setIsChooseWithdrawNetworkOpen(false);
           }}
+        />
+
+        {/* Step 5 (Withdraw Flow): Enter Amount Screen */}
+        <WithdrawAmountModal
+          visible={isWithdrawAmountOpen}
+          coin={selectedDepositCoin}
+          network={selectedWithdrawNetwork}
+          address={withdrawAddress}
+          onClose={() => setIsWithdrawAmountOpen(false)}
+          onProceedWithdraw={(amt) => {
+            setWithdrawAmount(amt);
+            setIsWithdrawAmountOpen(false);
+            setIsConfirmWithdrawOpen(true);
+          }}
+        />
+
+        {/* Step 6 (Withdraw Flow): Confirm Order Screen */}
+        <ConfirmWithdrawModal
+          visible={isConfirmWithdrawOpen}
+          coin={selectedDepositCoin}
+          network={selectedWithdrawNetwork}
+          address={withdrawAddress}
+          amount={withdrawAmount}
+          onClose={() => setIsConfirmWithdrawOpen(false)}
+          onConfirm={() => {
+            setIsConfirmWithdrawOpen(false);
+            setIsVerifyPasskeyOpen(true);
+          }}
+        />
+
+        {/* Step 7 (Withdraw Flow): Verify Passkey Modal */}
+        <VerifyPasskeyModal
+          visible={isVerifyPasskeyOpen}
+          onClose={() => setIsVerifyPasskeyOpen(false)}
+          onSuccess={() => {
+            setIsVerifyPasskeyOpen(false);
+            const now = new Date();
+            const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            const feeVal = typeof selectedWithdrawNetwork?.fee === 'number' ? selectedWithdrawNetwork.fee : parseFloat((selectedWithdrawNetwork?.fee as any) || '1.5');
+            const newRecord: WithdrawalRecord = {
+              id: `tx-${Date.now()}`,
+              symbol: selectedDepositCoin?.symbol ?? 'USDT',
+              name: selectedDepositCoin?.name ?? 'TetherUS',
+              amount: withdrawAmount,
+              usdEquivalent: withdrawAmount * (selectedDepositCoin?.symbol === 'BTC' ? 96000 : 1),
+              network: selectedWithdrawNetwork?.name ?? 'Tron (TRC20)',
+              address: withdrawAddress,
+              fee: feeVal,
+              status: 'Processing',
+              createdAt: formattedDate,
+              txId: `${Math.random().toString(36).substring(2)}${Math.random().toString(36).substring(2)}`,
+              wallet: 'Spot Account',
+            };
+            addWithdrawalRecord(newRecord);
+            setIsWithdrawProcessingOpen(true);
+          }}
+        />
+
+        {/* Step 8 (Withdraw Flow): Withdrawal Processing Screen */}
+        <WithdrawProcessingModal
+          visible={isWithdrawProcessingOpen}
+          coin={selectedDepositCoin}
+          amount={withdrawAmount}
+          onClose={() => setIsWithdrawProcessingOpen(false)}
+          onViewHistory={() => {
+            setIsWithdrawProcessingOpen(false);
+            setIsWithdrawHistoryOpen(true);
+          }}
+        />
+
+        {/* Step 9 (Withdraw Flow): Withdrawal History Screen */}
+        <WithdrawHistoryModal
+          visible={isWithdrawHistoryOpen}
+          onClose={() => setIsWithdrawHistoryOpen(false)}
+          onSelectWithdrawal={(record) => {
+            setSelectedHistoryRecord(record);
+            setIsWithdrawDetailOpen(true);
+          }}
+        />
+
+        {/* Step 10 (Withdraw Flow): Withdrawal Details Screen */}
+        <WithdrawDetailModal
+          visible={isWithdrawDetailOpen}
+          record={selectedHistoryRecord}
+          onClose={() => setIsWithdrawDetailOpen(false)}
         />
       </View>
     </ScreenLayout>

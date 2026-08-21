@@ -13,6 +13,21 @@ export interface UserHolding {
 
 export type AssetsTabId = 'overview' | 'funding' | 'earn' | 'spot' | 'futures';
 
+export interface WithdrawalRecord {
+  id: string;
+  symbol: string;
+  name: string;
+  amount: number;
+  usdEquivalent: number;
+  network: string;
+  address: string;
+  fee: number;
+  status: 'Processing' | 'Completed' | 'Failed';
+  createdAt: string;
+  txId: string;
+  wallet: string;
+}
+
 export interface PortfolioState {
   hideBalance: boolean;
   hideSmallBalances: boolean;
@@ -20,12 +35,14 @@ export interface PortfolioState {
   assetsAccountTab: 'assets' | 'account';
   searchQuery: string;
   holdings: UserHolding[];
+  withdrawalHistory: WithdrawalRecord[];
 
   toggleHideBalance: () => void;
   toggleHideSmallBalances: () => void;
   setSelectedTab: (tab: AssetsTabId) => void;
   setAssetsAccountTab: (tab: 'assets' | 'account') => void;
   setSearchQuery: (query: string) => void;
+  addWithdrawalRecord: (record: WithdrawalRecord) => void;
 }
 
 const DEFAULT_HOLDINGS: UserHolding[] = [
@@ -81,6 +98,51 @@ const DEFAULT_HOLDINGS: UserHolding[] = [
   },
 ];
 
+const INITIAL_WITHDRAWAL_HISTORY: WithdrawalRecord[] = [
+  {
+    id: 'tx-1001',
+    symbol: 'USDT',
+    name: 'TetherUS',
+    amount: 0.010493,
+    usdEquivalent: 0.010492,
+    network: 'Tron (TRC20)',
+    address: 'TMrGBFdGnKUgLhbhf2qcXc7pp5qaDDjMXg',
+    fee: 1.5,
+    status: 'Processing',
+    createdAt: '2026-08-21 10:05:18',
+    txId: '7a9c3d4f8e1b2a5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c',
+    wallet: 'Spot Account',
+  },
+  {
+    id: 'tx-1000',
+    symbol: 'USDT',
+    name: 'TetherUS',
+    amount: 25.5,
+    usdEquivalent: 25.5,
+    network: 'BNB Smart Chain (BEP20)',
+    address: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+    fee: 0.29,
+    status: 'Completed',
+    createdAt: '2026-08-20 18:22:04',
+    txId: '0x4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e',
+    wallet: 'Spot Account',
+  },
+  {
+    id: 'tx-999',
+    symbol: 'BTC',
+    name: 'Bitcoin',
+    amount: 0.0025,
+    usdEquivalent: 240.0,
+    network: 'Bitcoin',
+    address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+    fee: 0.0001,
+    status: 'Completed',
+    createdAt: '2026-08-15 14:10:50',
+    txId: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+    wallet: 'Spot Account',
+  },
+];
+
 export const usePortfolioStore = create<PortfolioState>((set) => ({
   hideBalance: false,
   hideSmallBalances: false,
@@ -88,6 +150,7 @@ export const usePortfolioStore = create<PortfolioState>((set) => ({
   assetsAccountTab: 'assets',
   searchQuery: '',
   holdings: DEFAULT_HOLDINGS,
+  withdrawalHistory: INITIAL_WITHDRAWAL_HISTORY,
 
   toggleHideBalance: () => set((state) => ({ hideBalance: !state.hideBalance })),
   toggleHideSmallBalances: () =>
@@ -95,4 +158,8 @@ export const usePortfolioStore = create<PortfolioState>((set) => ({
   setSelectedTab: (selectedTab) => set({ selectedTab }),
   setAssetsAccountTab: (assetsAccountTab) => set({ assetsAccountTab }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
+  addWithdrawalRecord: (record) =>
+    set((state) => ({
+      withdrawalHistory: [record, ...state.withdrawalHistory],
+    })),
 }));
