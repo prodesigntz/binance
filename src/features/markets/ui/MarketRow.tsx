@@ -4,6 +4,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { PercentBadge } from '../../../shared/ui/PercentBadge';
 
+import { CryptoIcon } from '../../../components/CryptoIcon';
+
 const COIN_LOGO_SIZE = 40;
 
 export type MarketRowPropsBase = {
@@ -81,11 +83,7 @@ function CryptoRowContent({
       })}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1.2, minWidth: 0 }}>
-        <Image
-          source={{ uri: image }}
-          style={{ width: COIN_LOGO_SIZE, height: COIN_LOGO_SIZE, borderRadius: COIN_LOGO_SIZE / 2 }}
-          resizeMode="cover"
-        />
+        <CryptoIcon symbol={symbol} size={COIN_LOGO_SIZE} iconUrl={image} />
         <View style={{ marginLeft: 12, flex: 1, minWidth: 0 }}>
           <Text style={[typography.h2, { color: colors.text }]} numberOfLines={1}>{symbol}</Text>
           <Text style={[typography.sub, { marginTop: 2, color: colors.text3 }]} numberOfLines={1}>{name}</Text>

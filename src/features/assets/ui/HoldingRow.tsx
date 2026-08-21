@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import type { UserHolding } from '../model/usePortfolioStore';
 
+import { CryptoIcon } from '../../../components/CryptoIcon';
+
 interface HoldingRowProps {
   holding: UserHolding;
   unitPrice: number;
@@ -55,13 +57,9 @@ export function HoldingRow({
       <View style={styles.topRow}>
         {/* Left: Logo & Names */}
         <View style={styles.leftCol}>
-          {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={styles.coinLogo} />
-          ) : (
-            <View style={[styles.avatarFallback, { backgroundColor: holding.color }]}>
-              <Text style={styles.avatarText}>{holding.symbol.slice(0, 2)}</Text>
-            </View>
-          )}
+          <View style={{ marginRight: 10 }}>
+            <CryptoIcon symbol={holding.symbol} size={28} iconUrl={imageUrl} />
+          </View>
           <View style={styles.nameBlock}>
             <Text style={[styles.symbol, { color: colors.text }]}>{holding.symbol}</Text>
             <Text style={[styles.name, { color: colors.text2 }]}>{holding.name}</Text>

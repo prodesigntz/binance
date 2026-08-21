@@ -14,6 +14,8 @@ import { useTheme } from '../../../app/providers/ThemeProvider';
 import { ChooseWithdrawNetworkSheet, type WithdrawNetwork } from './ChooseWithdrawNetworkSheet';
 import type { CoinAsset } from './SelectAssetSheet';
 
+import { CryptoIcon } from '../../../components/CryptoIcon';
+
 export interface EnterAddressModalProps {
   visible: boolean;
   coin: CoinAsset | null;
@@ -116,7 +118,7 @@ export function EnterAddressModal({
           >
             {selectedNetwork ? (
               <View style={styles.selectedNetBadge}>
-                <View style={[styles.redDot, { backgroundColor: selectedNetwork.color ?? '#ef0027' }]} />
+                <CryptoIcon symbol={selectedNetwork.name} size={16} />
                 <Text style={styles.selectedNetName}>{selectedNetwork.name}</Text>
               </View>
             ) : (

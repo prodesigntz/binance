@@ -22,8 +22,10 @@ export interface DepositDetailModalProps {
   onSwitchNetwork: () => void;
 }
 
+import { CryptoIcon } from '../../../components/CryptoIcon';
+
 // Generate realistic QR code SVG pattern blocks
-function DepositQrCode({ size = 200 }: { size?: number }): React.JSX.Element {
+function DepositQrCode({ size = 200, coinSymbol = 'USDT' }: { size?: number; coinSymbol?: string }): React.JSX.Element {
   return (
     <View style={[styles.qrWrapper, { width: size, height: size }]}>
       <Svg width={size - 24} height={size - 24} viewBox="0 0 100 100">
@@ -52,7 +54,7 @@ function DepositQrCode({ size = 200 }: { size?: number }): React.JSX.Element {
 
       {/* Center Badge Logo */}
       <View style={styles.qrCenterBadge}>
-        <Text style={styles.qrBadgeText}>₮</Text>
+        <CryptoIcon symbol={coinSymbol} size={28} />
       </View>
     </View>
   );
@@ -122,7 +124,7 @@ export function DepositDetailModal({
         >
           {/* QR Code Section */}
           <View style={styles.qrContainer}>
-            <DepositQrCode size={210} />
+            <DepositQrCode size={210} coinSymbol={coin.symbol} />
           </View>
 
           {/* Network Info Row */}

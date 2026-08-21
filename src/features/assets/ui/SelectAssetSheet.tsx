@@ -13,6 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 
+import { CryptoIcon } from '../../../components/CryptoIcon';
+
 export interface CoinAsset {
   id: string;
   symbol: string;
@@ -165,8 +167,8 @@ export function SelectAssetSheet({
                     onPress={() => onSelectCoin(coin)}
                     activeOpacity={0.7}
                   >
-                    <View style={styles.coinLogoFallback}>
-                      <Text style={styles.avatarText}>{coin.symbol.slice(0, 2)}</Text>
+                    <View style={{ marginRight: 12 }}>
+                      <CryptoIcon symbol={coin.symbol} size={32} iconUrl={coin.imageUrl} />
                     </View>
                     <View style={styles.coinInfo}>
                       <Text style={[styles.coinSymbol, { color: colors.text }]}>{coin.symbol}</Text>

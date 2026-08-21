@@ -12,6 +12,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 
+import { CryptoIcon } from '../../../components/CryptoIcon';
+
 export interface WithdrawNetwork {
   id: string;
   name: string;
@@ -143,8 +145,8 @@ export function ChooseWithdrawNetworkSheet({
                     activeOpacity={0.7}
                   >
                     <View style={styles.cardHeader}>
-                      <View style={[styles.avatar, { backgroundColor: net.color ?? '#F0B90B' }]}>
-                        <Text style={styles.avatarText}>{net.name.slice(0, 2)}</Text>
+                      <View style={{ marginRight: 8 }}>
+                        <CryptoIcon symbol={net.name} size={24} />
                       </View>
                       <Text style={styles.netName}>
                         {net.name}{' '}
