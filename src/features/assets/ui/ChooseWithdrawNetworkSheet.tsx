@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Modal,
   View,
   Text,
   StyleSheet,
@@ -106,13 +105,7 @@ export function ChooseWithdrawNetworkSheet({
   if (!visible) return null;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-      statusBarTranslucent
-    >
+    <View style={[StyleSheet.absoluteFillObject, { zIndex: 1000 }]}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <TouchableWithoutFeedback>
           <View
@@ -171,7 +164,7 @@ export function ChooseWithdrawNetworkSheet({
           </View>
         </TouchableWithoutFeedback>
       </Pressable>
-    </Modal>
+    </View>
   );
 }
 
