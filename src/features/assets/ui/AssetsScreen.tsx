@@ -172,6 +172,11 @@ export function AssetsScreen(): React.JSX.Element {
   return (
     <ScreenLayout inTabNavigator>
       <View style={[styles.container, { backgroundColor: colors.bg }]}>
+        {/* Sticky Header at the top (Overview, Funding, Earn, Spot, Futures) */}
+        <View style={{ backgroundColor: colors.bg, zIndex: 10 }}>
+          <AssetsTabStrip activeTab={selectedTab} onTabChange={setSelectedTab} />
+        </View>
+
         <FlatList
           data={filteredHoldings}
           keyExtractor={(item) => item.id}
@@ -185,9 +190,6 @@ export function AssetsScreen(): React.JSX.Element {
           }
           ListHeaderComponent={
             <View>
-              {/* Sub Tab Strip on VERY TOP (Overview, Funding, Earn, Spot, Futures) */}
-              <AssetsTabStrip activeTab={selectedTab} onTabChange={setSelectedTab} />
-
               {/* Main Total Balance & Quick Actions */}
               <AssetsHeader
                 totalUsd={totalUsdBalance}
